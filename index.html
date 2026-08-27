@@ -327,4 +327,271 @@
 
         function resetApp() {
             document.getElementById('form-login').reset();
-            document.getElementById('form-quiz').re
+            document.getElementById('form-quiz').reemove('hidden');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            currentUser = {
+                id: 'CAND-' + Date.now(),
+                name: document.getElementById('user-name').value,
+                age: document.getElementById('user-age').value,
+                grade: document.getElementById('user-grade').value,
+                email: document.getElementById('user-email').value,
+                status: 'Pendente'
+            };
+            showStep('step-intro');
+        }
+
+        function startQuiz() {
+            showStep('step-quiz');
+        }
+
+        function submitQuiz(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const answers = {};
+            formData.forEach((value, key) => {
+                answers[key] = value;
+            });
+
+            currentUser.answers = answers;
+            currentUser.date = new Date().toLocaleDateString('pt-BR');
+
+            candidates.push(currentUser);
+            localStorage.setItem('libero_candidates', JSON.stringify(candidates));
+
+            document.getElementById('display-user-email').innerText = currentUser.email;
+            showStep('step-thanks');
+        }
+
+        function resetApp() {
+            document.getElementById('form-login').reset();
+            document.getElementById('form-quiz').reset();
+            showStep('step-login');
+        }
+
+        // --- CONTROLE DE ACESSO COM SENHA ---
+        function requestAdminAccess() {
+            document.getElementById('admin-pass-input').value = '';
+            document.getElementById('pass-error-msg').classList.add('hidden');
+            document.getElementById('modal-password').classList.remove('hidden');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('modal-password').classList.add('hidden');
+        }
+
+        function verifyAdminPassword(e) {
+            e.preventDefault();
+            const inputPass = document.getElementById('admin-pass-input').value;
+            if(inputPass === ADMIN_PASSWORD) {
+                closePasswordModal();
+                toggleAdminModal();
+            } else {
+                document.getElementById('pass-error-msg').classList.remove('hidden');
+            }
+        }
+
+        // --- PAINEL DO TIME SUB-15 (ADMIN) ---
+        function toggleAdminModal() {
+            const modal = document.getElementById('modal-admin');
+            modal.classList.toggle('hidden');
+            if(!modal.classList.contains('hidden')) {
+                renderCandidates();
+            }
+        }
+
+        function renderCandidates() {
+            const list = document.getElementById('candidates-list');
+            document.getElementById('cand-count').innerText = candidates.length;
+            list.innerHTML = '';
+
+            if(candidates.length === 0) {
+                list.innerHTML = '<p class="text-center text-slate-400 py-6">Nenhuma candidatura registrada até o momento.</p>';
+                return;
+            }
+
+            candidates.forEach((c, index) => {
+                const card = document.createElement('div');
+                card.className = "border rounded-xl p-4 bg-slate-50 space-y-3";
+                
+                let answersHTML = '';
+                for(let i = 1; i <= 7; i++) {
+                    const qKey = 'q' + i;
+                    answersHTML += `
+                        <div class="text-xs border-b pb-1">
+                            <span class="font-bold text-slate-700">P${i}:</span> ${c.answers[qKey] || ''} 
+                            <span class="text-slate-400 block italic">Gabarito: ${GABARITO[qKey]}</span>
+                        </div>
+                    `;
+                }
+
+                let statusBadge = '';
+                if(c.status === 'Aprovado') statusBadge = '<span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded font-bold">Aprovado pelo Time</span>';
+                else if(c.status === 'Recusado') statusBadge = '<span class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded font-bold">Recusado</span>';
+                else statusBadge = '<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded font-bold">Em Análise</span>';
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h5 class="font-bold text-slate-800">${c.name} (${c.age} anos) - <span class="text-blue-600">${c.grade}</span></h5>
+                            <p class="text-xs text-slate-500">${c.email} | Data: ${c.date}</p>
+                        </div>
+                        <div>${statusBadge}</div>
+                    </div>
+                    
+                    <details class="text-xs text-slate-600">
+                        <summary class="cursor-pointer font-bold text-blue-600 hover:underline">Ver Respostas e Gabarito</summary>
+                        <div class="mt-2 space-y-2 bg-white p-3 rounded-lg border">
+                            ${answersHTML}
+                        </div>
+                    </details>
+
+                    <div class="flex gap-2 pt-2 border-t">
+                        <button onclick="updateCandidateStatus(${index}, 'Aprovado')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-2 rounded-lg font-bold flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-check"></i> Aceitar pelo Time Sub-15
+                        </button>
+                        <button onclick="updateCandidateStatus(${index}, 'Recusado')" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs py-2 rounded-lg font-bold flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-xmark"></i> Recusar Candidatura
+                        </button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function updateCandidateStatus(index, newStatus) {
+            candidates[index].status = newStatus;
+            localStorage.setItem('libero_candidates', JSON.stringify(candidates));
+            renderCandidates();
+            sendRealEmail(candidates[index]);
+            openEmailModalView(candidates[index]);
+        }
+
+        function clearAllCandidates() {
+            if(confirm('Tem certeza que deseja apagar todas as candidaturas?')) {
+                candidates = [];
+                localStorage.removeItem('libero_candidates');
+                renderCandidates();
+            }
+        }
+
+        // --- DISPARO DE E-MAIL REAL VIA EMAILJS ---
+        function sendRealEmail(candidato) {
+            if (EMAILJS_PUBLIC_KEY === "" || EMAILJS_SERVICE_ID === "") return;
+
+            const templateId = candidato.status === 'Aprovado' ? EMAILJS_TEMPLATE_APROVADO : EMAILJS_TEMPLATE_RECUSADO;
+            const verifyUrl = `${window.location.origin}${window.location.pathname}?verify=${encodeURIComponent(btoa(JSON.stringify({id: candidato.id, name: candidato.name, grade: candidato.grade, status: 'APROVADO_OFICIAL'})))}`;
+
+            const templateParams = {
+                to_name: candidato.name,
+                to_email: candidato.email,
+                grade: candidato.grade,
+                qr_code_link: verifyUrl,
+                date_presencial: "01/09/2026"
+            };
+
+            emailjs.send(EMAILJS_SERVICE_ID, templateId, templateParams)
+                .then(() => console.log('E-mail real enviado com sucesso via EmailJS!'))
+                .catch(err => console.error('Erro ao enviar e-mail via EmailJS:', err));
+        }
+
+        // --- PRÉVIA DO E-MAIL NA TELA ---
+        function openEmailModalView(candidato) {
+            const modal = document.getElementById('modal-email');
+            const body = document.getElementById('email-body');
+            modal.classList.remove('hidden');
+
+            if(candidato.status === 'Aprovado') {
+                const verifyUrl = `${window.location.origin}${window.location.pathname}?verify=${encodeURIComponent(btoa(JSON.stringify({id: candidato.id, name: candidato.name, grade: candidato.grade, status: 'APROVADO_OFICIAL'})))}`;
+
+                body.innerHTML = `
+                    <div class="border-b pb-3 text-xs text-slate-500 space-y-1">
+                        <div><strong>De:</strong> Time Sub-15 de Vôlei &lt;volei.sub15@escola.com&gt;</div>
+                        <div><strong>Para:</strong> ${candidato.name} &lt;${candidato.email}&gt;</div>
+                        <div><strong>Assunto:</strong> PARABÉNS! Você foi aceito pelo Time Sub-15 para o Teste Prático de Líbero</div>
+                    </div>
+                    <div class="py-4 space-y-3 text-sm text-slate-700">
+                        <p>Olá, <strong>${candidato.name}</strong> (${candidato.grade})!</p>
+                        <p class="text-emerald-700 font-semibold">Parabéns! Sua aplicação no questionário foi aprovada pelo Time Sub-15 de Vôlei.</p>
+                        <p>Você demonstrou ótimo conhecimento técnico sobre a posição e foi aceito pelo time para participar da última fase: o nosso teste prático de quadra (Mini-jogo 3x3)!</p>
+                        
+                        <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl text-center space-y-2">
+                            <h5 class="font-bold text-blue-900">Orientação para a Apresentação Presencial:</h5>
+                            <p class="text-sm font-semibold text-blue-800">🗓 Data do Teste Prático: 01/09/2026</p>
+                            <p class="text-sm text-blue-800">Procure e fale presencialmente com o <strong>Cláudio</strong> na quadra para realizar o teste com o time Sub-15.</p>
+                        </div>
+
+                        <div class="text-center pt-2">
+                            <p class="text-xs font-bold text-slate-500 mb-2">Apresente este QR Code de Confirmação na entrada:</p>
+                            <div id="qrcode" class="flex justify-center my-2"></div>
+                            <span class="text-[10px] text-slate-400">Código de Validação do Time Sub-15: ${candidato.id}</span>
+                        </div>
+                    </div>
+                `;
+
+                setTimeout(() => {
+                    document.getElementById("qrcode").innerHTML = "";
+                    new QRCode(document.getElementById("qrcode"), {
+                        text: verifyUrl,
+                        width: 128,
+                        height: 128
+                    });
+                }, 100);
+
+            } else {
+                body.innerHTML = `
+                    <div class="border-b pb-3 text-xs text-slate-500 space-y-1">
+                        <div><strong>De:</strong> Time Sub-15 de Vôlei &lt;volei.sub15@escola.com&gt;</div>
+                        <div><strong>Para:</strong> ${candidato.name} &lt;${candidato.email}&gt;</div>
+                        <div><strong>Assunto:</strong> Atualização sobre a Seleção de Líbero Vôlei Sub-15</div>
+                    </div>
+                    <div class="py-4 space-y-3 text-sm text-slate-700">
+                        <p>Olá, <strong>${candidato.name}</strong>.</p>
+                        <p>Agradecemos muito o seu interesse e empenho em participar do processo seletivo para a vaga de líbero do time Sub-15.</p>
+                        <p class="text-red-600 font-semibold">Infelizmente, informamos que você não atingiu a pontuação mínima necessária no questionário neste momento.</p>
+                        <p>Incentivamos que continue treinando seus fundamentos e participando de novas oportunidades com o nosso time!</p>
+                        <p class="pt-4 text-xs text-slate-500">Atenciosamente,<br><strong>Time Sub-15 de Vôlei</strong></p>
+                    </div>
+                `;
+            }
+        }
+
+        function closeEmailModal() {
+            document.getElementById('modal-email').classList.add('hidden');
+        }
+
+        // --- VALIDADOR DO QR CODE ---
+        function validateQRCodeData(encodedData) {
+            showStep('step-qr-validator');
+            try {
+                const data = JSON.parse(atob(decodeURIComponent(encodedData)));
+                
+                document.getElementById('qr-result-icon').innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500"></i>';
+                document.getElementById('qr-result-title').innerText = "Candidato Aprovado pelo Time!";
+                document.getElementById('qr-result-title').className = "text-2xl font-bold text-emerald-700 mb-2";
+                document.getElementById('qr-result-desc').innerText = "Este QR Code é autêntico e confirma que o aluno passou no questionário e foi aceito pelo Time Sub-15 para o teste prático de quadra.";
+                
+                document.getElementById('qr-result-details').innerHTML = `
+                    <div><strong>NOME:</strong> ${data.name}</div>
+                    <div><strong>SÉRIE:</strong> ${data.grade}</div>
+                    <div><strong>STATUS:</strong> ${data.status}</div>
+                    <div><strong>ID CANDIDATO:</strong> ${data.id}</div>
+                `;
+            } catch(e) {
+                document.getElementById('qr-result-icon').innerHTML = '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
+                document.getElementById('qr-result-title').innerText = "QR Code Inválido!";
+                document.getElementById('qr-result-title').className = "text-2xl font-bold text-red-700 mb-2";
+                document.getElementById('qr-result-desc').innerText = "Não foi possível validar as informações deste código.";
+            }
+        }
+
+        function hideQRValidator() {
+            window.history.pushState({}, document.title, window.location.pathname);
+            showStep('step-login');
+        }
+    </script>
+</body>
+</html>
+```
