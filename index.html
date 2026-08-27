@@ -1,0 +1,330 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleção de Líbero - Vôlei Sub-15</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QR Code Generator JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- EmailJS SDK para envio de e-mails reais -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="gradient-bg text-white shadow-lg p-4">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-volleyball text-3xl text-yellow-400 animate-bounce"></i>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wide">Vôlei Sub-15 | Seleção de Líbero</h1>
+            </div>
+            <button onclick="requestAdminAccess()" class="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg backdrop-blur-sm transition flex items-center gap-1 font-semibold">
+                <i class="fa-solid fa-lock text-yellow-300"></i> Área do Treinador
+            </button>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal Dinâmico -->
+    <main class="max-w-3xl mx-auto w-full p-4 md:p-6 my-auto">
+        
+        <!-- ETAPA 1: LOGIN / CADASTRO -->
+        <div id="step-login" class="bg-white rounded-2xl shadow-xl p-6 md:p-8 transition-all">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-blue-900">Cadastro de Candidato</h2>
+                <p class="text-slate-500 text-sm">Preencha seus dados para iniciar o processo seletivo.</p>
+            </div>
+            <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Nome Completo</label>
+                    <input type="text" id="user-name" required placeholder="Digite seu nome" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Idade</label>
+                        <input type="number" id="user-age" min="12" max="16" required placeholder="Ex: 14" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">Ano Escolar / Série</label>
+                        <input type="text" id="user-grade" required placeholder="Ex: 9º Ano B" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">E-mail</label>
+                    <input type="email" id="user-email" required placeholder="seuemail@exemplo.com" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition duration-200 mt-4">
+                    Continuar <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- ETAPA 2: TELA INICIAL DE REGRAS -->
+        <div id="step-intro" class="hidden bg-white rounded-2xl shadow-xl p-6 md:p-8">
+            <div class="text-center mb-6">
+                <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Processo Seletivo</span>
+                <h2 class="text-3xl font-extrabold text-blue-950 mt-2">Vôlei Sub-15: Seleção de Líbero</h2>
+                <p class="text-slate-600 mt-2">Estamos à procura do novo pilar defensivo do nosso time!</p>
+            </div>
+
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl mb-6">
+                <div class="flex items-start">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 text-xl mr-3 mt-1"></i>
+                    <div>
+                        <h4 class="font-bold text-amber-900">Regra Principal do Concurso:</h4>
+                        <p class="text-sm text-amber-800">O candidato <strong>NÃO PODE</strong> estar jogando ou inscrito em outro time oficial de vôlei da escola. A vaga exige dedicação exclusiva ao nosso time Sub-15.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-3 mb-6 text-sm text-slate-600">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-clipboard-check text-blue-600 text-lg"></i>
+                    <span><strong>Etapa 1:</strong> Questionário teórico de 7 perguntas sobre a posição.</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-envelope-open-text text-blue-600 text-lg"></i>
+                    <span><strong>Etapa 2:</strong> Avaliação das respostas e retorno por e-mail.</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-volleyball text-blue-600 text-lg"></i>
+                    <span><strong>Etapa 3:</strong> Teste prático 3x3 na quadra com o time Sub-15.</span>
+                </div>
+            </div>
+
+            <button onclick="startQuiz()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg transition duration-200">
+                Li as regras e quero começar a aplicação <i class="fa-solid fa-play ml-2"></i>
+            </button>
+        </div>
+
+        <!-- ETAPA 3: QUESTIONÁRIO -->
+        <div id="step-quiz" class="hidden bg-white rounded-2xl shadow-xl p-6 md:p-8">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 class="font-bold text-lg text-blue-900">Questionário Técnico</h3>
+                <span id="quiz-progress" class="text-xs bg-blue-100 text-blue-800 font-bold px-2.5 py-1 rounded-full">Pergunta 1 de 7</span>
+            </div>
+
+            <form id="form-quiz" onsubmit="submitQuiz(event)" class="space-y-6">
+                <!-- P1 -->
+                <div class="question-block">
+                    <label class="block font-semibold text-slate-800 mb-2">1. No rodízio do sistema 5x1, em qual momento exato você entra em quadra como líbero?</label>
+                    <textarea required name="q1" rows="2" placeholder="Explique com suas palavras..." class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"></textarea>
+                </div>
+                <!-- P2 -->
+                <div class="question-block border-t pt-4">
+                    <label class="block font-semibold text-slate-800 mb-2">2. Se você der um toque estando DENTRO da linha dos 3 metros (zona de ataque), o seu atacante pode cortar essa bola acima da rede?</label>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="q2" value="Sim" required> Sim, sem problemas.</label>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="q2" value="Não"> Não, é falta (só se for de manchete ou bola abaixo da rede).</label>
+                    </div>
+                </div>
+                <!-- P3 -->
+                <div class="question-block border-t pt-4">
+                    <label class="block font-semibold text-slate-800 mb-2">3. O levantador defendeu a primeira bola e ela subiu para você no fundo. Como você resolve essa jogada?</label>
+                    <textarea required name="q3" rows="2" placeholder="O que você faz e como executa..." class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"></textarea>
+                </div>
+                <!-- P4 -->
+                <div class="question-block border-t pt-4">
+                    <label class="block font-semibold text-slate-800 mb-2">4. Na recepção de saque, se a bola vem caindo no meio entre você e o ponteiro, de quem é a preferência e o que você faz?</label>
+                    <textarea required name="q4" rows="2" placeholder="De quem é a bola e qual a sua atitude..." class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"></textarea>
+                </div>
+                <!-- P5 -->
+                <div class="question-block border-t pt-4">
+                    <label class="block font-semibold text-slate-800 mb-2">5. O ponteiro adversário vem para dar uma pancada forte na diagonal. Qual é a sua postura e posicionamento?</label>
+                    <textarea required name="q5" rows="2" placeholder="Como se posiciona e prepara o corpo..." class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"></textarea>
+                </div>
+                <!-- P6 -->
+                <div class="question-block border-t pt-4">
+                    <label class="block font-semibold text-slate-800 mb-2">6. Qual movimento de chão você usa quando a bola vem caindo muito curta na sua frente e não dá tempo de chegar de pé?</label>
+                    <input type="text" name="q6" required placeholder="Ex: Peixinho, panqueca..." class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                </div>
+                <!-- P7 -->
+                <div class="question-block border-t pt-4">
+                    <label class="block font-semibold text-slate-800 mb-2">7. Se o ponteiro do seu time tomar 2 aces seguidos e demonstrar insegurança, qual é a sua atitude na quadra?</label>
+                    <textarea required name="q7" rows="2" placeholder="Como reagir para ajudar..." class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition duration-200">
+                    Finalizar e Enviar Candidatura <i class="fa-solid fa-paper-plane ml-2"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- ETAPA 4: CONFIRMAÇÃO / ESPERA -->
+        <div id="step-thanks" class="hidden bg-white rounded-2xl shadow-xl p-8 text-center space-y-4">
+            <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-3xl mb-4 animate-pulse">
+                <i class="fa-solid fa-clock"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-blue-950">Inscrição em Análise!</h2>
+            <p class="text-slate-600 max-w-md mx-auto">
+                Sua candidatura foi registrada com sucesso. O time Sub-15 analisará suas respostas e o resultado será enviado para o e-mail informado:
+            </p>
+            <p id="display-user-email" class="font-bold text-blue-600 bg-blue-50 py-2 px-4 rounded-lg inline-block"></p>
+            <p class="text-xs text-slate-400">Por favor, verifique sua caixa de entrada nos próximos dias.</p>
+            <div class="pt-4 border-t">
+                <button onclick="resetApp()" class="text-sm text-slate-500 hover:text-blue-600 underline">Voltar ao início</button>
+            </div>
+        </div>
+
+        <!-- TELA DE VALIDAÇÃO DE QR CODE DA COMISSÃO -->
+        <div id="step-qr-validator" class="hidden bg-white rounded-2xl shadow-xl p-6 text-center">
+            <div id="qr-result-icon" class="text-5xl mb-3"></div>
+            <h2 id="qr-result-title" class="text-2xl font-bold mb-2"></h2>
+            <p id="qr-result-desc" class="text-slate-600 text-sm mb-4"></p>
+            <div id="qr-result-details" class="bg-slate-50 p-4 rounded-xl text-left text-xs font-mono mb-4 space-y-1"></div>
+            <button onclick="hideQRValidator()" class="bg-blue-600 text-white font-bold px-6 py-2 rounded-xl text-sm">Fechar</button>
+        </div>
+
+    </main>
+
+    <!-- MODAL DE SENHA DA ÁREA DO TREINADOR -->
+    <div id="modal-password" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center space-y-4">
+            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-user-lock"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800">Acesso Restrito</h3>
+            <p class="text-xs text-slate-500">Digite a senha para acessar o painel de avaliação de candidatos do time Sub-15.</p>
+            
+            <form onsubmit="verifyAdminPassword(event)" class="space-y-3">
+                <input type="password" id="admin-pass-input" required placeholder="Digite a senha" class="w-full text-center px-4 py-2 border rounded-xl text-lg tracking-widest focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <p id="pass-error-msg" class="text-xs text-red-500 font-semibold hidden">Senha incorreta!</p>
+                
+                <div class="flex gap-2">
+                    <button type="button" onclick="closePasswordModal()" class="w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-xl text-sm">Cancelar</button>
+                    <button type="submit" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-sm">Entrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL ÁREA DO TREINADOR (PAINEL ADMIN) -->
+    <div id="modal-admin" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="gradient-bg text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-user-shield mr-2"></i> Painel do Time Sub-15</h3>
+                <button onclick="toggleAdminModal()" class="text-white hover:text-red-300 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-6 flex-1">
+                <div class="flex justify-between items-center border-b pb-4">
+                    <h4 class="font-bold text-slate-800">Candidaturas Recebidas (<span id="cand-count">0</span>)</h4>
+                    <button onclick="clearAllCandidates()" class="text-xs text-red-500 hover:underline">Limpar lista</button>
+                </div>
+
+                <div id="candidates-list" class="space-y-4">
+                    <!-- Candidatos gerados dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL VISUALIZADOR DE E-MAIL (SIMULADOR / PRÉVIA) -->
+    <div id="modal-email" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden">
+            <div class="bg-slate-800 text-white p-4 flex justify-between items-center">
+                <span class="text-xs font-mono"><i class="fa-solid fa-envelope mr-2"></i> Prévia do E-mail Enviado</span>
+                <button onclick="closeEmailModal()" class="text-white hover:text-red-300 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="email-body" class="p-6 space-y-4">
+                <!-- Conteúdo do E-mail -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-xs text-slate-400 border-t bg-white">
+        Vôlei Sub-15 &copy; 2026 - Sistema de Seleção de Líbero
+    </footer>
+
+    <!-- LOGICA JAVASCRIPT -->
+    <script>
+        // SENHA DE ACESSO AO PAINEL DO TREINADOR / TIME
+        const ADMIN_PASSWORD = "1234";
+
+        // CONFIGURAÇÃO DO EMAILJS COM SUAS CHAVES CONECTADAS
+        const EMAILJS_PUBLIC_KEY = "iZDX-DgiblKr-QpJj"; 
+        const EMAILJS_SERVICE_ID = "service_52e9vlt"; 
+        const EMAILJS_TEMPLATE_APROVADO = "Template_d9u0u7e"; 
+        const EMAILJS_TEMPLATE_RECUSADO = "template_d7431ee"; 
+
+        if(EMAILJS_PUBLIC_KEY !== "") {
+            emailjs.init(EMAILJS_PUBLIC_KEY);
+        }
+
+        let currentUser = {};
+        let candidates = JSON.parse(localStorage.getItem('libero_candidates')) || [];
+
+        // Gabarito Oficial de Respostas
+        const GABARITO = {
+            q1: "Entra quando o central vai sacar (ou após perder o ponto, assumindo o fundo).",
+            q2: "Não. É falta se cortar acima da rede bola levantada de toque na zona de ataque.",
+            q3: "Assumir o 2º toque e levantar de manchete/toque para as pontas.",
+            q4: "Preferência do líbero. Gritar 'MINHA!' bem alto e assumir a recepção.",
+            q5: "Recuar dois passos, joelhos dobrados, centro de gravidade baixo na linha da diagonal.",
+            q6: "Peixinho ou Panqueca.",
+            q7: "Dar moral, conversar e dar um passo para cobrir uma área maior do passe dele."
+        };
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const qrData = urlParams.get('verify');
+            if(qrData) {
+                validateQRCodeData(qrData);
+            }
+        };
+
+        function showStep(stepId) {
+            ['step-login', 'step-intro', 'step-quiz', 'step-thanks', 'step-qr-validator'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(stepId).classList.remove('hidden');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            currentUser = {
+                id: 'CAND-' + Date.now(),
+                name: document.getElementById('user-name').value,
+                age: document.getElementById('user-age').value,
+                grade: document.getElementById('user-grade').value,
+                email: document.getElementById('user-email').value,
+                status: 'Pendente'
+            };
+            showStep('step-intro');
+        }
+
+        function startQuiz() {
+            showStep('step-quiz');
+        }
+
+        function submitQuiz(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const answers = {};
+            formData.forEach((value, key) => {
+                answers[key] = value;
+            });
+
+            currentUser.answers = answers;
+            currentUser.date = new Date().toLocaleDateString('pt-BR');
+
+            candidates.push(currentUser);
+            localStorage.setItem('libero_candidates', JSON.stringify(candidates));
+
+            document.getElementById('display-user-email').innerText = currentUser.email;
+            showStep('step-thanks');
+        }
+
+        function resetApp() {
+            document.getElementById('form-login').reset();
+            document.getElementById('form-quiz').re
